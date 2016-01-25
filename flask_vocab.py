@@ -64,29 +64,18 @@ def index():
   assert flask.session["target_count"] > 0
   app.logger.debug("At least one seems to be set correctly")
   return flask.render_template('vocab.html')
-
-@app.route("/keep_going")
-def keep_going():
-  """
-  After initial use of index, we keep the same scrambled
-  word and try to get more matches
-  """
-  flask.g.vocab = WORDS.as_list();
-  return flask.render_template('vocab.html')
   
 
 @app.route("/success")
 def success():
   return flask.render_template('success.html')
 
-#######################
-# Form handler.  
-# CIS 322 (399se) note:
-#   You'll need to change this to a
-#   a JSON request handler
-#######################
+###############
+# AJAX request handlers
+#   These return JSON, rather than rendering pages.
+###############
 
-@app.route("/_check", methods = ["POST"])
+@app.route("/check")
 def check():
   """
   User has submitted the form with a word ('attempt')
@@ -99,19 +88,22 @@ def check():
   app.logger.debug("Entering check")
 
   ## The data we need, from form and from cookie
-  text = request.form["attempt"]
+  text = request.args.get("text", type=str)
   jumble = flask.session["jumble"]
   matches = flask.session.get("matches", []) # Default to empty list
+  rslt = { "was_match": False }
 
-  ## Is it good? 
+  ## Is it good?
   in_jumble = LetterBag(jumble).contains(text)
   matched = WORDS.has(text)
 
-  ## Respond appropriately 
+  ## Respond appropriately
+
   if matched and in_jumble and not (text in matches):
     ## Cool, they found a new word
     matches.append(text)
     flask.session["matches"] = matches
+    rslt = { "was_match": True }
   elif text in matches:
     flask.flash("You already found {}".format(text))
   elif not matched:
@@ -121,25 +113,8 @@ def check():
   else:
     app.logger.debug("This case shouldn't happen!")
     assert False  # Raises AssertionError
-
-  ## Choose page:  Solved enough, or keep going? 
   if len(matches) >= flask.session["target_count"]:
-    return flask.redirect(url_for("success"))
-  else:
-    return flask.redirect(url_for("keep_going"))
-
-###############
-# AJAX request handlers 
-#   These return JSON, rather than rendering pages. 
-###############
-
-@app.route("/_example")
-def example():
-  """
-  Example ajax request handler
-  """
-  app.logger.debug("Got a JSON request");
-  rslt = { "key": "value" }
+      rslt = {"did_win": True}
   return jsonify(result=rslt)
 
 
@@ -161,18 +136,18 @@ def format_filt( something ):
 @app.errorhandler(404)
 def error_404(e):
   app.logger.warning("++ 404 error: {}".format(e))
-  return render_template('404.html'), 404
+  return flask.render_template('404.html'), 404
 
 @app.errorhandler(500)
 def error_500(e):
    app.logger.warning("++ 500 error: {}".format(e))
    assert app.debug == False #  I want to invoke the debugger
-   return render_template('500.html'), 500
+   return flask.render_template('500.html'), 500
 
 @app.errorhandler(403)
 def error_403(e):
   app.logger.warning("++ 403 error: {}".format(e))
-  return render_template('403.html'), 403
+  return flask.render_template('403.html'), 403
 
 
 

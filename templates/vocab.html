@@ -80,24 +80,47 @@
 <br />
 <div class="row">
   <div class="col-xs-6 text-center">
-  <form id="entry" method="POST" action="/_check">
+  <form id="entry">
     <label for="attempt">Word:</label>
     <input id="attempt" name="attempt" type="text" width="15"
       autocomplete="off"  autofocus />
-    <input type="submit" name="try" />
   </form>
 </div></div>
 
 <br />
 
-{% if session.matches|length is not equalto 0  %}
-<h2>You found </h2>
-<p id="results">
-  {% for match in session.matches %}
-  {{ match }} 
-  {% endfor %}
-</p>
-{% endif %}
+<h2>You've found: </h2>
+<p id="results"></p>
+
+<script>
+
+// Suppress normal form submission
+$("#entry").submit( function(event) {
+    event.preventDefault();
+});
+
+// On each keystroke, ask the server whether we have enough
+// word matches.
+$("#attempt").keyup(function() {
+    var txt = $("#attempt").val();
+    $.getJSON( "/check", { text: txt },
+        function(data) {
+            rsval = data.result.was_match;
+            console.log("rsval: " + rsval)
+            win = data.result.did_win;
+            console.log("did_win: " + win)
+            if (rsval) {
+               $("#results").html(txt);
+               $("#attempt").val("");
+            }
+            else if (win) {
+               $("#attempt").val("");
+               window.location = "/success"
+            }
+        }
+    );
+});
+</script>
 
 
 {% with messages = get_flashed_messages() %}
