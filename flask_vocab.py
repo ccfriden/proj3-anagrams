@@ -104,12 +104,12 @@ def check():
     matches.append(text)
     flask.session["matches"] = matches
     rslt = { "was_match": True }
-  elif text in matches:
-    flask.flash("You already found {}".format(text))
-  elif not matched:
-    flask.flash("{} isn't in the list of words".format(text))
   elif not in_jumble:
-    flask.flash('"{}" can\'t be made from the letters {}'.format(text,jumble))
+    rslt = { "bad_input": True }
+  elif text in matches:
+    rslt = { "already_found": True }
+  elif not matched:
+    rslt = { "not_word": True }
   else:
     app.logger.debug("This case shouldn't happen!")
     assert False  # Raises AssertionError

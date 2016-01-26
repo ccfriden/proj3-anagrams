@@ -89,6 +89,7 @@
 
 <br />
 
+<p id="errors"></p>
 <h2>You've found: </h2>
 <p id="results"></p>
 
@@ -105,17 +106,35 @@ $("#attempt").keyup(function() {
     var txt = $("#attempt").val();
     $.getJSON( "/check", { text: txt },
         function(data) {
-            rsval = data.result.was_match;
-            console.log("rsval: " + rsval)
+            match = data.result.was_match;
+            console.log("match: " + match)
             win = data.result.did_win;
-            console.log("did_win: " + win)
-            if (rsval) {
+            console.log("win: " + win)
+            invalid_chars = data.result.bad_input;
+            console.log("invalid_chars: " + invalid_chars)
+            invalid_word = data.result.not_word;
+            console.log("invalid_word: " + invalid_word)
+            been_found = data.result.already_found;
+            console.log("been_found: " + been_found)
+            if (match) {
                $("#results").html(txt);
                $("#attempt").val("");
             }
             else if (win) {
                $("#attempt").val("");
                window.location = "/success"
+            }
+            else if (invalid_chars) {
+               $("#errors").html(txt+ " can\'t be made from the availble letters!");
+            }
+            else if (invalid_word) {
+               $("#errors").html(txt+ " is not a word from the list!");
+            }
+            else if (been_found) {
+               $("#errors").html(txt+ " has already been found!");
+            }
+            else {
+                $("#errors").html("");
             }
         }
     );
