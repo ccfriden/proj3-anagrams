@@ -125,7 +125,7 @@ $("#attempt").keyup(function() {
                window.location = "/success"
             }
             else if (invalid_chars) {
-               $("#errors").html(txt+ " can\'t be made from the availble letters!");
+               $("#attempt").val("");
             }
             else if (invalid_word) {
                $("#errors").html(txt+ " is not a word from the list!");
